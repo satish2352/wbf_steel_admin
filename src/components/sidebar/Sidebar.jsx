@@ -227,25 +227,25 @@ const SidebarMenu = [
     ],
   },
 
-  {
-    menu: "Gallery Master",
-    url: "/gallerymaster",
-    // mainIcon: <RiTeamFill size={24} />,
-    mainIcon: <img src={gallery} alt="upload-icon" style={{ color: "black" }} className="img-fluid" size={24} />,
-    subMenu: [
-      {
-        subMenus: "Gallery Category Master",
-        url: "/galleryDetails",
-        icon: <RiFileListLine style={{ color: "black" }} size={24} />,
-      },
-      {
-        subMenus: "Gallery Images Master",
-        url: "/galleryDetailsWithImages",
-        // icon: <RiFileListLine style={{ color: "black" }} size={24} />,
-        icon: <img src={gallery} alt="upload-icon" style={{ color: "black" }} className="img-fluid" size={24} />,
-      },
-    ],
-  },
+  // {
+  //   menu: "Gallery Master",
+  //   url: "/gallerymaster",
+  //   // mainIcon: <RiTeamFill size={24} />,
+  //   mainIcon: <img src={gallery} alt="upload-icon" style={{ color: "black" }} className="img-fluid" size={24} />,
+  //   subMenu: [
+  //     {
+  //       subMenus: "Gallery Category Master",
+  //       url: "/galleryDetails",
+  //       icon: <RiFileListLine style={{ color: "black" }} size={24} />,
+  //     },
+  //     {
+  //       subMenus: "Gallery Images Master",
+  //       url: "/galleryDetailsWithImages",
+  //       // icon: <RiFileListLine style={{ color: "black" }} size={24} />,
+  //       icon: <img src={gallery} alt="upload-icon" style={{ color: "black" }} className="img-fluid" size={24} />,
+  //     },
+  //   ],
+  // },
 
 
   {

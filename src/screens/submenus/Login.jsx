@@ -38,10 +38,11 @@ const Login = () => {
       isValid = false;
     }
 
-    // if (!recaptchaValue) {
-    //   errors.recaptcha = "Please complete the CAPTCHA";
-    //   isValid = false;
-    // }
+   if (!recaptchaValue) {
+  errors.recaptcha = "Please verify that you are not a robot";
+  isValid = false;
+}
+
 
     setErrors(errors);
     return isValid;
@@ -74,9 +75,12 @@ const Login = () => {
         toast.error("Login failed");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Login failed, please enter correct email/password");
-    } finally {
+  console.error("Login error:", error);
+  toast.error("Login failed, please enter correct email/password");
+  captchaRef.current.reset();
+  setRecaptchaValue(null);
+}
+ finally {
       setLoading(false);
     }
   }
@@ -282,6 +286,16 @@ const Login = () => {
                     />
                   </div> */}
                   {errors.recaptcha && <small className="text-danger d-flex justify-content-center">{errors.recaptcha}</small>}
+                  
+                  <div className="d-flex justify-content-center my-3">
+  <ReCAPTCHA
+    ref={captchaRef}
+    sitekey="6LcxHCksAAAAADSj9E-lBu29tiaRTaFkhgIzQf9V"
+    onChange={handleRecaptchaChange}
+  />
+</div>
+
+
 
                   <Row className="justify-content-center">
                     <Col xs="auto">

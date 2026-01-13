@@ -45,24 +45,31 @@ const UploadCv = () => {
   }, []);
 
   const fetchTeam = async () => {
-    const accessToken = localStorage.getItem("accessToken");
-    try {
-      const response = await instance.get("uploadcv/find-uploadcv", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const reversedData = response.data.responseData.reverse();
-      setTeam(reversedData);
-      setData(reversedData);
-    } catch (error) {
-      console.error("Error fetching team data:", error);
-      // toast.error("Error fetching team data");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const accessToken = localStorage.getItem("accessToken");
+  setLoading(true);
+  try {
+    const response = await instance.get("uploadcv/find-uploadcv", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Filter out deleted records (assuming backend uses isDeleted flag)
+    const filteredData = response.data.responseData
+      .filter(item => !item.isDeleted)
+      .reverse();
+
+    setTeam(filteredData);
+    setData(filteredData);
+  } catch (error) {
+    console.error("Error fetching team data:", error);
+    toast.error("Error fetching data");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     // This should be inside the component, after fetching data
     const paginatedData = searchQuery.trim()
@@ -97,65 +104,64 @@ const UploadCv = () => {
   };
   
 
-  const handleDelete = async (id) => {
-    confirmAlert({
-      title: "Confirm to delete",
-      message: "Are you sure you want to delete this data?",
-      customUI: ({ onClose }) => (
-        <div
-          style={{
-            textAlign: "left",
-            padding: "20px",
-            backgroundColor: "white",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(5, 5, 5, 0.2)",
-            maxWidth: "400px",
-            margin: "0 auto",
-          }}
-        >
-          <h2>Confirm to delete</h2>
-          <p>Are you sure you want to delete this data?</p>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginTop: "20px",
+const handleDelete = async (id) => {
+  confirmAlert({
+    title: "Confirm to delete",
+    message: "Are you sure you want to delete this data?",
+    customUI: ({ onClose }) => (
+      <div
+        style={{
+          textAlign: "left",
+          padding: "20px",
+          backgroundColor: "white",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(5, 5, 5, 0.2)",
+          maxWidth: "400px",
+          margin: "0 auto",
+        }}
+      >
+        <h2>Confirm to delete</h2>
+        <p>Are you sure you want to delete this data?</p>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
+          <button
+            style={{ marginRight: "10px" }}
+            className="btn btn-primary"
+            onClick={async () => {
+              setLoading(true);
+              const accessToken = localStorage.getItem("accessToken");
+              try {
+                await instance.delete(`uploadcv/isdelete-uploadcv/${id}`, {
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                  },
+                });
+
+                // Optimistically remove deleted record from state
+                setTeam(prev => prev.filter(item => item.id !== id));
+                setData(prev => prev.filter(item => item.id !== id));
+
+                toast.success("Data deleted successfully");
+              } catch (error) {
+                console.error("Error deleting data:", error);
+                toast.error("Error deleting data");
+              } finally {
+                setLoading(false);
+              }
+              onClose();
             }}
           >
-            <button
-              style={{ marginRight: "10px" }}
-              className="btn btn-primary"
-              onClick={async () => {
-                setLoading(true);
-                const accessToken = localStorage.getItem("accessToken");
-                try {
-                  await instance.delete(`uploadcv/isdelete-uploadcv/${id}`, {
-                    headers: {
-                      Authorization: `Bearer ${accessToken}`,
-                      "Content-Type": "application/json",
-                    },
-                  });
-                  toast.success("Data Deleted Successfully");
-                  fetchTeam();
-                } catch (error) {
-                  console.error("Error deleting data:", error);
-                  toast.error("Error deleting data");
-                } finally {
-                  setLoading(false);
-                }
-                onClose();
-              }}
-            >
-              Yes
-            </button>
-            <button className="btn btn-secondary" onClick={() => onClose()}>
-              No
-            </button>
-          </div>
+            Yes
+          </button>
+          <button className="btn btn-secondary" onClick={() => onClose()}>
+            No
+          </button>
         </div>
-      ),
-    });
-  };
+      </div>
+    ),
+  });
+};
+
 
   const CustomHeader = ({ name }) => (
     <div style={{ fontWeight: "bold", color: "black", fontSize: "16px" }}>

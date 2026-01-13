@@ -49,6 +49,12 @@ const Infrastructure = () => {
     </div>
   );
 
+   const TITLE_REGEX = /^[A-Za-z ]+$/;   // Only letters & spaces
+const DESC_REGEX = /^[A-Za-z0-9\s.,'"\-()!?]+$/;  // Description allowed chars
+
+      const titleCount = formData.title?.length || 0;
+  const subtitleCount = formData.subtitle?.length || 0;
+  const descCount = formData.desc?.length || 0;
 
 
   const tableColumns = (currentPage, rowsPerPage) => [
@@ -176,42 +182,75 @@ const Infrastructure = () => {
     }
   };
 
-  const validateForm = (formData) => {
-    let errors = {};
-    let isValid = true;
+const validateForm = async (formData) => {
+  let errors = {};
+  let isValid = true;
 
-    if (!formData.img) {
-      errors.img = "Image is not 338x220 pixels";
-      isValid = false;
-    
-    } else if (
-      formData.img instanceof File &&
-      !validateImageSize(formData.img)
-    ) {
-      errors.img = "Image is required with 338x220 pixels";
+  // Image validation
+  if (!formData.img) {
+    errors.img = "Image is required";
+    isValid = false;
+  } else if (formData.img instanceof File) {
+    try {
+      await validateImageSize(formData.img);
+    } catch (err) {
+      errors.img = err;
       isValid = false;
     }
-    if (!formData.title?.trim()) {
-      errors.title = "Title is required";
-      isValid = false;
-    }
-    if (!formData.subtitle?.trim()) {
-      errors.subtitle = "Sub Title is required";
-      isValid = false;
-    }
+  }
 
-    if (!formData.desc?.trim()) {
-      errors.desc = "Description is required";
-      isValid = false;
-    } 
-    // else if (formData.desc.length > 1000) {
-    //   errors.desc = "Description must be 1000 characters or less";
-    //   isValid = false;
-    // }
+  // Title
+  if (!formData.title?.trim()) {
+    errors.title = "Title is required";
+    isValid = false;
+  } else if (!TITLE_REGEX.test(formData.title)) {
+    errors.title = "Only letters and spaces allowed";
+    isValid = false;
+  } else if (formData.title.length > 30) {
+    errors.title = "Maximum 30 characters allowed";
+    isValid = false;
+  }else if (formData.title.length < 3) {
+  errors.title = "Title must be at least 3 characters";
+  isValid = false;
+}
 
-    setErrors(errors);
-    return isValid;
-  };
+
+  // SubTitle
+  if (!formData.subtitle?.trim()) {
+    errors.subtitle = "Sub Title is required";
+    isValid = false;
+  } else if (!TITLE_REGEX.test(formData.subtitle)) {
+    errors.subtitle = "Only letters and spaces allowed";
+    isValid = false;
+  } else if (formData.subtitle.length > 30) {
+    errors.subtitle = "Maximum 30 characters allowed";
+    isValid = false;
+  }else if (formData.subtitle.length < 3) {
+  errors.subtitle = "Sub Title must be at least 3 characters";
+  isValid = false;
+}
+
+
+  // Description
+  if (!formData.desc?.trim()) {
+    errors.desc = "Description is required";
+    isValid = false;
+  } else if (!DESC_REGEX.test(formData.desc)) {
+    errors.desc = "Invalid characters";
+    isValid = false;
+  } else if (formData.desc.length > 300) {
+    errors.desc = "Maximum 300 characters allowed";
+    isValid = false;
+  }else if (formData.desc.length < 10) {
+  errors.desc = "Description must be at least 10 characters";
+  isValid = false;
+}
+
+
+  setErrors(errors);
+  return isValid;
+};
+
 
   const validateImageSize = (file) => {
     return new Promise((resolve, reject) => {
@@ -230,21 +269,60 @@ const Infrastructure = () => {
 
   
 
-  const handleChange = async (name, value) => {
-    if (name === "img" && value instanceof File) {
-      try {
-        await validateImageSize(value);
-        setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-        setErrors((prevErrors) => ({ ...prevErrors, img: "" }));
-      } catch (error) {
-        setErrors((prevErrors) => ({ ...prevErrors, img: error }));
-        setImagePreview("");
-      }
+const handleChange = async (name, value) => {
+  let newValue = value;
+
+  // Block typing beyond max length
+  if ((name === "title" || name === "subtitle") && value.length > 30) {
+    newValue = value.slice(0, 30); // keep only first 30 characters
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "Maximum 30 characters allowed",
+    }));
+  } else if (name === "title" || name === "subtitle") {
+    // Validate normally if under limit
+    if (!newValue.trim()) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: `${name === "title" ? "Title" : "Sub Title"} is required`,
+      }));
+    } else if (!TITLE_REGEX.test(newValue)) {
+      setErrors((prev) => ({ ...prev, [name]: "Only letters and spaces allowed" }));
     } else {
-      setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-      setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  };
+  }
+
+  // Description validation
+  if (name === "desc") {
+    if (newValue.length > 300) {
+      newValue = newValue.slice(0, 300);
+      setErrors((prev) => ({ ...prev, desc: "Maximum 300 characters allowed" }));
+    } else if (!newValue.trim()) {
+      setErrors((prev) => ({ ...prev, desc: "Description is required" }));
+    } else if (!DESC_REGEX.test(newValue)) {
+      setErrors((prev) => ({ ...prev, desc: "Invalid characters" }));
+    } else {
+      setErrors((prev) => ({ ...prev, desc: "" }));
+    }
+  }
+
+  // Image validation
+  if (name === "img" && newValue instanceof File) {
+    try {
+      await validateImageSize(newValue);
+      setErrors((prev) => ({ ...prev, img: "" }));
+      setImagePreview(URL.createObjectURL(newValue));
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, img: error }));
+      setImagePreview("");
+    }
+  }
+
+  // Finally update formData
+  setFormData((prev) => ({ ...prev, [name]: newValue }));
+};
+
 
 
 
@@ -288,8 +366,20 @@ const Infrastructure = () => {
         setImagePreview("");
         setShowTable(true); // Switch back to table view after submission
       } catch (error) {
-        console.error("Error handling form submission:", error);
-      } finally {
+  if (error.response?.data?.data) {
+    const apiErrors = {};
+    error.response.data.data.forEach(err => {
+      apiErrors[err.path] = err.msg;
+    });
+    setErrors(apiErrors);
+  } else if (error.response?.data?.message) {
+    toast.error(error.response.data.message);
+  } else {
+    toast.error("Something went wrong");
+  }
+}
+
+       finally {
         setLoading(false); // Set loading to false
       }
     }
@@ -578,6 +668,7 @@ const Infrastructure = () => {
                       onChange={handleChange}
                       initialData={formData}
                       error={errors.title}
+                      helperText={`${formData.title?.length || 0}/30`} // Counter
                     />
                   </Col>
                   <Col md={6} className="mt-2">
@@ -590,6 +681,7 @@ const Infrastructure = () => {
                       onChange={handleChange}
                       initialData={formData}
                       error={errors.subtitle}
+                       helperText={`${formData.subtitle?.length || 0}/30`} // Counter
                     />
                   </Col>
                   <Col md={6} className="mt-2">
@@ -603,7 +695,8 @@ const Infrastructure = () => {
                       initialData={formData}
                       textarea
                       error={errors.desc}
-                      charLimit={500}
+                      charLimit={300}
+                        helperText={`${formData.desc?.length || 0}/300`} // Counter
                     />
                   </Col>
                 </Row>
