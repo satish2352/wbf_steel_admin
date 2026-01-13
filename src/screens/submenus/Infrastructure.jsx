@@ -270,57 +270,84 @@ const validateForm = async (formData) => {
   
 
 const handleChange = async (name, value) => {
-  let newValue = value;
 
-  // Block typing beyond max length
-  if ((name === "title" || name === "subtitle") && value.length > 30) {
-    newValue = value.slice(0, 30); // keep only first 30 characters
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "Maximum 30 characters allowed",
-    }));
-  } else if (name === "title" || name === "subtitle") {
-    // Validate normally if under limit
-    if (!newValue.trim()) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: `${name === "title" ? "Title" : "Sub Title"} is required`,
-      }));
-    } else if (!TITLE_REGEX.test(newValue)) {
-      setErrors((prev) => ({ ...prev, [name]: "Only letters and spaces allowed" }));
-    } else {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+  /* ---------------- IMAGE ---------------- */
+  if (name === "img" && value instanceof File) {
+    try {
+      await validateImageSize(value);
+      setErrors((prev) => ({ ...prev, img: "" }));
+      setImagePreview(URL.createObjectURL(value));
+      setFormData((prev) => ({ ...prev, img: value }));
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, img: err }));
+      setImagePreview("");
     }
+    return;
   }
 
-  // Description validation
+  if (name === "title") {
+  // allow only letters & spaces
+  if (!/^[A-Za-z ]*$/.test(value)) return;
+
+  // hard block after 30 chars
+  if (value.length > 30) return;
+
+  setErrors((prev) => ({
+    ...prev,
+    title:
+      value.length === 0
+        ? "Title is required"
+        : value.length < 3
+        ? "Minimum 3 characters"
+        : "",
+  }));
+
+  setFormData((prev) => ({ ...prev, title: value }));
+  return;
+}
+
+
+ if (name === "subtitle") {
+  if (!/^[A-Za-z ]*$/.test(value)) return;
+
+  // hard block after 30 chars
+  if (value.length > 30) return;
+
+  setErrors((prev) => ({
+    ...prev,
+    subtitle:
+      value.length === 0
+        ? "Sub Title is required"
+        : value.length < 3
+        ? "Minimum 3 characters"
+        : "",
+  }));
+
+  setFormData((prev) => ({ ...prev, subtitle: value }));
+  return;
+}
+
+
+  /* ---------------- DESCRIPTION ---------------- */
   if (name === "desc") {
-    if (newValue.length > 300) {
-      newValue = newValue.slice(0, 300);
-      setErrors((prev) => ({ ...prev, desc: "Maximum 300 characters allowed" }));
-    } else if (!newValue.trim()) {
-      setErrors((prev) => ({ ...prev, desc: "Description is required" }));
-    } else if (!DESC_REGEX.test(newValue)) {
-      setErrors((prev) => ({ ...prev, desc: "Invalid characters" }));
+    // block invalid chars
+    if (!DESC_REGEX.test(value)) return;
+
+    // block beyond 300
+    if (value.length > 300) return;
+
+    if (value.length < 10) {
+      setErrors((prev) => ({ ...prev, desc: "Minimum 10 characters" }));
     } else {
       setErrors((prev) => ({ ...prev, desc: "" }));
     }
+
+    setFormData((prev) => ({ ...prev, desc: value }));
+    return;
   }
 
-  // Image validation
-  if (name === "img" && newValue instanceof File) {
-    try {
-      await validateImageSize(newValue);
-      setErrors((prev) => ({ ...prev, img: "" }));
-      setImagePreview(URL.createObjectURL(newValue));
-    } catch (error) {
-      setErrors((prev) => ({ ...prev, img: error }));
-      setImagePreview("");
-    }
-  }
-
-  // Finally update formData
-  setFormData((prev) => ({ ...prev, [name]: newValue }));
+  /* ---------------- DEFAULT ---------------- */
+  setFormData((prev) => ({ ...prev, [name]: value }));
 };
 
 

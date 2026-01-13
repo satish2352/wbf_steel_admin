@@ -43,6 +43,8 @@ const Testimonial = () => {
  const onlyLettersRegex = /^[a-zA-Z\s]+$/; // for Name
 const companyNameRegex = /^[a-zA-Z0-9\s&.,'-]+$/; // allows special chars
 
+
+
   const MAX_REVIEW_LENGTH = 200;
   const [reviewCount, setReviewCount] = useState(0);
 
@@ -269,10 +271,19 @@ const companyNameRegex = /^[a-zA-Z0-9\s&.,'-]+$/; // allows special chars
       isValid = false;
     }
 
-    if (!formData.experience) {
-      errors.experience = "Experience is required";
-      isValid = false;
-    }
+if (formData.experience === "" || formData.experience === undefined) {
+  errors.experience = "Experience is required";
+  isValid = false;
+} else if (
+  isNaN(formData.experience) ||
+  Number(formData.experience) < 0 ||
+  Number(formData.experience) > 50
+) {
+  errors.experience = "Experience must be between 0 and 50 years";
+  isValid = false;
+}
+
+
 
     setErrors(errors);
     return isValid;
@@ -293,53 +304,117 @@ const companyNameRegex = /^[a-zA-Z0-9\s&.,'-]+$/; // allows special chars
   });
 };
 
+const handleChange = async (eOrName, maybeValue) => {
+  let name, value;
 
-  const handleChange = async (name, value) => {
-   if (name === "img" && value instanceof File) {
-  try {
-    await validateImageSize(value);
-    setFormData((prev) => ({ ...prev, img: value }));
-    setErrors((prev) => ({ ...prev, img: "" }));
-  } catch (error) {
-    setFormData((prev) => ({ ...prev, img: null }));  // IMPORTANT
-    setErrors((prev) => ({ ...prev, img: error }));
-    setImagePreview("");
+  if (typeof eOrName === "object" && eOrName.target) {
+    name = eOrName.target.name;
+    value = eOrName.target.value;
+  } else {
+    name = eOrName;
+    value = maybeValue;
   }
-  return;
-}
-else {
-      if (name === "review") {
-        if (value.length > MAX_REVIEW_LENGTH) return; // stop typing after 200
-        setReviewCount(value.length);
-      }
-      setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
 
-      let error = "";
-
-      if (name === "name" && value && !onlyLettersRegex.test(value)) {
-        error = "Name should not contain numbers";
-      }
-
-     if (name === "company_Name" && value && !companyNameRegex.test(value)) {
-  error = "Invalid characters in company name";
-}
-
-
-      if (name === "star") {
-        if (value && (isNaN(value) || value < 1 || value > 5)) {
-          error = "Star must be between 1 and 5";
-        }
-      }
-
-      if (name === "review") {
-        if (value.length > 200) {
-          error = "Review must be 200 characters or less";
-        }
-      }
-
-      setErrors((prev) => ({ ...prev, [name]: error }));
+  /* ---------------- IMAGE ---------------- */
+  if (name === "img" && value instanceof File) {
+    try {
+      await validateImageSize(value);
+      setFormData((prev) => ({ ...prev, img: value }));
+      setErrors((prev) => ({ ...prev, img: "" }));
+    } catch (err) {
+      setFormData((prev) => ({ ...prev, img: null }));
+      setErrors((prev) => ({ ...prev, img: err }));
+      setImagePreview("");
     }
-  };
+    return;
+  }
+
+  /* ---------------- NAME (only letters) ---------------- */
+  if (name === "name") {
+    const clean = value.replace(/[^a-zA-Z\s]/g, ""); // remove numbers & symbols
+
+    if (clean !== value) {
+      setErrors((prev) => ({ ...prev, name: "Only letters allowed" }));
+    } else {
+      setErrors((prev) => ({ ...prev, name: "" }));
+    }
+
+    setFormData((prev) => ({ ...prev, name: clean }));
+    return;
+  }
+
+  /* ---------------- COMPANY NAME ---------------- */
+  if (name === "company_Name") {
+    if (!companyNameRegex.test(value)) {
+      setErrors((prev) => ({
+        ...prev,
+        company_Name: "Invalid characters",
+      }));
+      return; // ⛔ block typing
+    } else {
+      setErrors((prev) => ({ ...prev, company_Name: "" }));
+    }
+
+    setFormData((prev) => ({ ...prev, company_Name: value }));
+    return;
+  }
+
+  /* ---------------- EXPERIENCE (0–50 only) ---------------- */
+  if (name === "experience") {
+    if (!/^\d*$/.test(value)) return; // ⛔ block letters
+
+    if (value === "") {
+      setFormData((prev) => ({ ...prev, experience: "" }));
+      setErrors((prev) => ({ ...prev, experience: "Experience is required" }));
+      return;
+    }
+
+    const num = Number(value);
+    if (num < 0 || num > 50) {
+      setErrors((prev) => ({
+        ...prev,
+        experience: "Experience must be 0–50",
+      }));
+      return; // ⛔ stop typing
+    } else {
+      setErrors((prev) => ({ ...prev, experience: "" }));
+    }
+
+    setFormData((prev) => ({ ...prev, experience: value }));
+    return;
+  }
+
+  /* ---------------- STAR (1–5 only) ---------------- */
+  if (name === "star") {
+    if (!/^\d*$/.test(value)) return; // ⛔ block letters
+
+    const num = Number(value);
+    if (num < 1 || num > 5) {
+      setErrors((prev) => ({ ...prev, star: "Star must be 1 to 5" }));
+      return; // ⛔ stop typing
+    } else {
+      setErrors((prev) => ({ ...prev, star: "" }));
+    }
+
+    setFormData((prev) => ({ ...prev, star: value }));
+    return;
+  }
+
+  /* ---------------- REVIEW (200 chars max) ---------------- */
+  if (name === "review") {
+    if (value.length > MAX_REVIEW_LENGTH) return; // ⛔ block typing
+
+    setReviewCount(value.length);
+    setErrors((prev) => ({ ...prev, review: "" }));
+    setFormData((prev) => ({ ...prev, review: value }));
+    return;
+  }
+
+  /* ---------------- DEFAULT ---------------- */
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
+
+
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -511,6 +586,8 @@ else {
       ),
     });
   };
+
+  
 
   const handleIsActive = async (id, isVisible) => {
     confirmAlert({
@@ -775,8 +852,9 @@ else {
                           }
                           placeholder="Enter Experience"
                           name="experience"
-                          type="text"
-                          onChange={handleChange}
+                          
+                          type="number"
+                           onChange={handleChange}
                           initialData={formData}
                           error={errors.experience}
                         />

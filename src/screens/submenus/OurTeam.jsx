@@ -1,6 +1,3 @@
-
-
-
 ////sos final
 import React, { useState, useEffect } from "react";
 import {
@@ -23,8 +20,8 @@ import instance from "../../api/AxiosInstance";
 import { FaEdit, FaTrash, FaEye, FaEyeSlash } from "react-icons/fa";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
-import { ThreeDots  } from 'react-loader-spinner'; 
-import { Tooltip, OverlayTrigger,  } from 'react-bootstrap';
+import { ThreeDots } from "react-loader-spinner";
+import { Tooltip, OverlayTrigger } from "react-bootstrap";
 import "../../App.scss";
 const OurTeam = () => {
   const { searchQuery, handleSearch, handleExport, setData, filteredData } =
@@ -47,8 +44,6 @@ const OurTeam = () => {
     </div>
   );
 
-
-
   const tableColumns = (currentPage, rowsPerPage) => [
     {
       name: <CustomHeader name="Sr. No." />,
@@ -66,6 +61,15 @@ const OurTeam = () => {
       name: <CustomHeader name="Description" />,
       cell: (row) => <span>{row.description}</span>,
     },
+    {
+      name: <CustomHeader name="Experience" />,
+      cell: (row) => <span>{row.experience} yrs</span>,
+    },
+    {
+      name: <CustomHeader name="Qualification" />,
+      cell: (row) => <span>{row.qualification}</span>,
+    },
+
     // {
     //   name: <CustomHeader name="Position No" />,
     //   cell: (row) => <span>{row.position_no}</span>,
@@ -98,7 +102,11 @@ const OurTeam = () => {
           >
             <Button
               className="ms-1"
-              style={{ backgroundColor: "red", color: "white", borderColor: "red" }}
+              style={{
+                backgroundColor: "red",
+                color: "white",
+                borderColor: "red",
+              }}
               onClick={() => handleDelete(row.id)}
             >
               <FaTrash />
@@ -106,14 +114,18 @@ const OurTeam = () => {
           </OverlayTrigger>
           <OverlayTrigger
             placement="top"
-            overlay={<Tooltip id="visibility-tooltip">{eyeVisibilityById[row.id] ? 'Hide' : 'Show'}</Tooltip>}
+            overlay={
+              <Tooltip id="visibility-tooltip">
+                {eyeVisibilityById[row.id] ? "Hide" : "Show"}
+              </Tooltip>
+            }
           >
             <Button
               className="ms-1"
               style={{
-                backgroundColor: eyeVisibilityById[row.id] ? 'red' : 'green',
-                borderColor: eyeVisibilityById[row.id] ? 'red' : 'green',
-                color: 'white',
+                backgroundColor: eyeVisibilityById[row.id] ? "red" : "green",
+                borderColor: eyeVisibilityById[row.id] ? "red" : "green",
+                color: "white",
               }}
               onClick={() => handleIsActive(row.id, !eyeVisibilityById[row.id])}
             >
@@ -123,22 +135,23 @@ const OurTeam = () => {
         </div>
       ),
     },
-
- 
   ];
 
   useEffect(() => {
     fetchTeam();
     // Retrieve and set visibility state from localStorage
-    const storedVisibility = JSON.parse(localStorage.getItem('eyeVisibilityById')) || {};
+    const storedVisibility =
+      JSON.parse(localStorage.getItem("eyeVisibilityById")) || {};
     setEyeVisibilityById(storedVisibility);
   }, []);
 
   useEffect(() => {
     // Store visibility state in localStorage whenever it changes
-    localStorage.setItem('eyeVisibilityById', JSON.stringify(eyeVisibilityById));
+    localStorage.setItem(
+      "eyeVisibilityById",
+      JSON.stringify(eyeVisibilityById)
+    );
   }, [eyeVisibilityById]);
-  
 
   useEffect(() => {
     if (formData.img && formData.img instanceof File) {
@@ -172,7 +185,7 @@ const OurTeam = () => {
         "Error fetching team:",
         error.response || error.message || error
       );
-    }    finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -181,42 +194,68 @@ const OurTeam = () => {
     let errors = {};
     let isValid = true;
 
+    // IMAGE
     if (!formData.img) {
       errors.img = "Image is required with 443x435 pixels";
       isValid = false;
-    } else if (formData.img instanceof File && !validateImageSize(formData.img)) {
-      errors.img = "Image is not 443x435 pixels";
-      isValid = false;
     }
 
-
+    // NAME (no numbers)
     if (!formData.name?.trim()) {
       errors.name = "Name is required";
       isValid = false;
+    } else if (/\d/.test(formData.name)) {
+      errors.name = "Name should not contain numbers";
+      isValid = false;
     }
 
+    // DESIGNATION (no numbers)
     if (!formData.designation?.trim()) {
       errors.designation = "Designation is required";
       isValid = false;
-    } else if (formData.designation.length > 40) {
-      errors.designation = "Designation must not exceed 40 characters";
+    } else if (/\d/.test(formData.designation)) {
+      errors.designation = "Designation should not contain numbers";
       isValid = false;
     }
-  
+
+    // DESCRIPTION (max 200 chars)
     if (!formData.description?.trim()) {
       errors.description = "Description is required";
       isValid = false;
-    } else if (formData.description.length > 151) {
-      errors.description = "Description must not exceed 151 characters";
+    } else if (formData.description.length > 200) {
+      errors.description = "Description must not exceed 200 characters";
       isValid = false;
     }
-    // formData.description.split(/\s+/).length > 25
+
+    // EXPERIENCE (0–50 only)
+    if (formData.experience === undefined || formData.experience === "") {
+      errors.experience = "Experience is required";
+      isValid = false;
+    } else if (
+      isNaN(formData.experience) ||
+      formData.experience < 0 ||
+      formData.experience > 50
+    ) {
+      errors.experience = "Experience must be between 0 and 50 years";
+      isValid = false;
+    }
+
+    // QUALIFICATION
+    if (!formData.qualification?.trim()) {
+      errors.qualification = "Qualification is required";
+      isValid = false;
+    } else if (formData.qualification.length < 2) {
+      errors.qualification = "Enter a valid qualification";
+      isValid = false;
+    }
+
+    // POSITION NO
     if (!formData.position_no) {
       errors.position_no = "Position no is required";
       isValid = false;
     }
-    setErrors(errors);
 
+    setErrors(errors);
     return isValid;
   };
 
@@ -235,20 +274,79 @@ const OurTeam = () => {
     });
   };
 
-  const handleChange = async (name, value) => {
-    if (name === "img" && value instanceof File) {
-      try {
-        await validateImageSize(value);
-        setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-        setErrors((prevErrors) => ({ ...prevErrors, img: "" }));
-      } catch (error) {
-        setErrors((prevErrors) => ({ ...prevErrors, img: error }));
-        setImagePreview("");
-      }
+ const handleChange = async (name, value) => {
+
+  // 🛑 BLOCK NUMBERS in Name & Designation
+  if (name === "name" || name === "designation") {
+    const cleanValue = value.replace(/[0-9]/g, ""); // remove numbers
+
+    if (cleanValue !== value) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "Numbers are not allowed",
+      }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  };
+
+    setFormData({ ...formData, [name]: cleanValue });
+    return;
+  }
+
+  // 🛑 DESCRIPTION – hard limit 200 chars
+  if (name === "description") {
+    if (value.length > 200) {
+      setErrors((prev) => ({
+        ...prev,
+        description: "Maximum 200 characters allowed",
+      }));
+      return; // ⛔ stop typing
+    } else {
+      setErrors((prev) => ({ ...prev, description: "" }));
+    }
+
+    setFormData({ ...formData, description: value });
+    return;
+  }
+
+  // 🛑 EXPERIENCE – only 0 to 50
+  if (name === "experience") {
+    if (value === "") {
+      setFormData({ ...formData, experience: "" });
+      return;
+    }
+
+    const num = Number(value);
+    if (isNaN(num) || num < 0 || num > 50) {
+      setErrors((prev) => ({
+        ...prev,
+        experience: "Only 0 to 50 allowed",
+      }));
+      return; // ⛔ block
+    } else {
+      setErrors((prev) => ({ ...prev, experience: "" }));
+    }
+
+    setFormData({ ...formData, experience: value });
+    return;
+  }
+
+  // 🛑 IMAGE (keep your existing logic)
+  if (name === "img" && value instanceof File) {
+    try {
+      await validateImageSize(value);
+      setFormData((prev) => ({ ...prev, img: value }));
+      setErrors((prev) => ({ ...prev, img: "" }));
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, img: error }));
+      setImagePreview("");
+    }
+    return;
+  }
+
+  setFormData({ ...formData, [name]: value });
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -298,7 +396,8 @@ const OurTeam = () => {
         ) {
           setErrors({
             ...errors,
-            position_no: "Position no already exists, please enter another number",
+            position_no:
+              "Position no already exists, please enter another number",
           });
         } else {
           toast.error("An error occurred. Please try again.");
@@ -353,8 +452,8 @@ const OurTeam = () => {
                   console.error("Error deleting data:", error);
                   toast.error("Error deleting data");
                 } finally {
-        setLoading(false); 
-      }
+                  setLoading(false);
+                }
                 onClose();
               }}
             >
@@ -424,8 +523,8 @@ const OurTeam = () => {
                   console.error("Error updating visibility:", error);
                   toast.error("Error updating visibility");
                 } finally {
-        setLoading(false); // Set loading to false
-      }
+                  setLoading(false); // Set loading to false
+                }
                 onClose();
               }}
             >
@@ -444,6 +543,7 @@ const OurTeam = () => {
     const selectedMember = team.find((member) => member.id === id);
     setEditingId(id);
     setFormData(selectedMember);
+    setImagePreview(selectedMember.img);
     setEditMode(true);
     setShowTable(false); // Switch to form view when editing
   };
@@ -461,194 +561,253 @@ const OurTeam = () => {
   };
 
   return (
-  
-
     <Container fluid>
-    <Row>
-      <Col>
-        <Card>
-          <Card.Header>
-            <Row>
-              {showTable ? (
-                <Col className="d-flex justify-content-end align-items-center">
-                <SearchInput
-            searchQuery={searchQuery}
-            onSearch={handleSearch}
-            
-            showExportButton={false}
-          />
-                  <Button
-                    variant="outline-success"
-                    onClick={handleAdd}
-                    className="ms-2 mb-3"
-                  >
-                    Add
-                  </Button>
-                </Col>
-              ) : (
-                <Col className="d-flex justify-content-end align-items-center">
-                  <Button   variant="outline-secondary" onClick={handleView}>
-                    View
-                  </Button>
-                </Col>
-              )}
-            </Row>
-          </Card.Header>
-
-          <Card.Body>
-            {loading ? ( // Check loading state
-              <div className="d-flex justify-content-center align-items-center" style={{ height: '100px' }}>
-                <ThreeDots  
-                  height="80"
-                  width="80"
-                  radius="9"
-                  color="#000"
-                  ariaLabel="three-dots-loading"
-            
-                  visible={true}
-                />
-              </div>
-            ) : showTable ? (
-              // <DataTable
-              //   columns={tableColumns(currentPage, rowsPerPage)}
-              //   data={filteredData.length > 0 ? filteredData : team}
-              //   pagination
-              //   responsive
-              //   striped
-              //   noDataComponent="No Data Available"
-              //   onChangePage={(page) => setCurrentPage(page)}
-              //   onChangeRowsPerPage={(rowsPerPage) =>
-              //     setRowsPerPage(rowsPerPage)
-              //   }
-              //   customStyles={{
-              //       rows: {
-              //         style: {
-              //           alignItems: "flex-start", // Aligns text to the top-left corner
-              //         },
-              //       },
-              //       cells: {
-              //         style: {
-              //           textAlign: "left", // Ensures text is aligned to the left
-              //         },
-              //       },
-              //     }}
-              // />
-              <DataTable
-              columns={tableColumns(currentPage, rowsPerPage)}
-              data={searchQuery.length > 0 ? filteredData : team} // Show testimonial initially, filteredData only when searching
-              pagination
-              responsive
-              striped
-              noDataComponent="No Data Available" // Show when search returns nothing
-              onChangePage={(page) => setCurrentPage(page)}
-              onChangeRowsPerPage={(rowsPerPage) => setRowsPerPage(rowsPerPage)}
-              customStyles={{
-                rows: {
-                  style: {
-                    alignItems: "flex-start",
-                  },
-                },
-                cells: {
-                  style: {
-                    textAlign: "left",
-                  },
-                },
-              }}
-            />
-            ) : (
-              <Form onSubmit={handleSubmit}>
-                <Row>
-                <Col md={12}>
-                    {imagePreview && (
-                      <img
-                        src={imagePreview}
-                        alt="Selected Preview"
-                        style={{
-                          width: "100px",
-                          height: "auto",
-                          marginBottom: "10px",
-                        }}
-                      />
-                    )}
-                    <NewResuableForm
-                      // label={"Upload photo"}
-                      label={<span>Upload photo<span className="text-danger">*</span></span>}
-                      placeholder={"Upload Image"}
-                      name={"img"}
-                      type={"file"}
-                      onChange={handleChange}
-                      initialData={formData}
-                      error={errors.img}
-                      imageDimensiion="Image must be 443*435 pixels" 
+      <Row>
+        <Col>
+          <Card>
+            <Card.Header>
+              <Row>
+                {showTable ? (
+                  <Col className="d-flex justify-content-end align-items-center">
+                    <SearchInput
+                      searchQuery={searchQuery}
+                      onSearch={handleSearch}
+                      showExportButton={false}
                     />
+                    <Button
+                      variant="outline-success"
+                      onClick={handleAdd}
+                      className="ms-2 mb-3"
+                    >
+                      Add
+                    </Button>
+                  </Col>
+                ) : (
+                  <Col className="d-flex justify-content-end align-items-center">
+                    <Button variant="outline-secondary" onClick={handleView}>
+                      View
+                    </Button>
+                  </Col>
+                )}
+              </Row>
+            </Card.Header>
+
+            <Card.Body>
+              {loading ? ( // Check loading state
+                <div
+                  className="d-flex justify-content-center align-items-center"
+                  style={{ height: "100px" }}
+                >
+                  <ThreeDots
+                    height="80"
+                    width="80"
+                    radius="9"
+                    color="#000"
+                    ariaLabel="three-dots-loading"
+                    visible={true}
+                  />
+                </div>
+              ) : showTable ? (
+                // <DataTable
+                //   columns={tableColumns(currentPage, rowsPerPage)}
+                //   data={filteredData.length > 0 ? filteredData : team}
+                //   pagination
+                //   responsive
+                //   striped
+                //   noDataComponent="No Data Available"
+                //   onChangePage={(page) => setCurrentPage(page)}
+                //   onChangeRowsPerPage={(rowsPerPage) =>
+                //     setRowsPerPage(rowsPerPage)
+                //   }
+                //   customStyles={{
+                //       rows: {
+                //         style: {
+                //           alignItems: "flex-start", // Aligns text to the top-left corner
+                //         },
+                //       },
+                //       cells: {
+                //         style: {
+                //           textAlign: "left", // Ensures text is aligned to the left
+                //         },
+                //       },
+                //     }}
+                // />
+                <DataTable
+                  columns={tableColumns(currentPage, rowsPerPage)}
+                  data={searchQuery.length > 0 ? filteredData : team} // Show testimonial initially, filteredData only when searching
+                  pagination
+                  responsive
+                  striped
+                  noDataComponent="No Data Available" // Show when search returns nothing
+                  onChangePage={(page) => setCurrentPage(page)}
+                  onChangeRowsPerPage={(rowsPerPage) =>
+                    setRowsPerPage(rowsPerPage)
+                  }
+                  customStyles={{
+                    rows: {
+                      style: {
+                        alignItems: "flex-start",
+                      },
+                    },
+                    cells: {
+                      style: {
+                        textAlign: "left",
+                      },
+                    },
+                  }}
+                />
+              ) : (
+                <Form onSubmit={handleSubmit}>
+                  <Row>
+                    <Col md={12}>
+                      {imagePreview && (
+                        <img
+                          src={imagePreview}
+                          alt="Selected Preview"
+                          style={{
+                            width: "100px",
+                            height: "auto",
+                            marginBottom: "10px",
+                          }}
+                        />
+                      )}
+                      <NewResuableForm
+                        // label={"Upload photo"}
+                        label={
+                          <span>
+                            Upload photo<span className="text-danger">*</span>
+                          </span>
+                        }
+                        placeholder={"Upload Image"}
+                        name={"img"}
+                        type={"file"}
+                        onChange={handleChange}
+                        initialData={formData}
+                        error={errors.img}
+                        imageDimensiion="Image must be 443*435 pixels"
+                      />
                     </Col>
                     <Col md={6} className="mt-2">
-                    <NewResuableForm
-                      // label={"Name"}
-                      label={<span>Name<span className="text-danger">*</span></span>}
-                      placeholder={"Enter Name"}
-                      name={"name"}
-                      type={"text"}
-                      onChange={handleChange}
-                      initialData={formData}
-                      error={errors.name}
-                    />
-                  </Col>
-                  <Col md={6} className="mt-2">
-                    <NewResuableForm
-                      // label={"Designation"}
-                      label={<span>Designation<span className="text-danger">*</span></span>}
-                      placeholder={"Enter Designation"}
-                      name={"designation"}
-                      type={"text"}
-                      onChange={handleChange}
-                      initialData={formData}
-                      error={errors.designation}
-                    />
-                  </Col>
-                  <Col md={6} className="mt-2">
-                    <NewResuableForm
-                      // label={"Description "}
-                      label={<span>Description<span className="text-danger">*</span></span>}
-                      placeholder={"Enter Description "}
-                      name={"description"}
-                      type={"text"}
-                      onChange={handleChange}
-                      initialData={formData}
-                      textarea
-                      error={errors.description}
-                    />
-                  </Col>
-                  <Col md={6} className="mt-2">
-                    <NewResuableForm
-                      // label={"Position Number"}
-                      label={<span>Position Number<span className="text-danger">*</span></span>}
-                      placeholder={"Enter Position Number "}
-                      name={"position_no"}
-                      type={"number"}
-                      onChange={handleChange}
-                      initialData={formData}
-                      error={errors.position_no}
-                    />
-                  </Col>
-                </Row>
-                <Row>
-                  <div className="mt-3 d-flex justify-content-end">
-                    <Button
-                      type="submit"
-                      variant={editMode ? "success" : "primary"}
-                    >
-                      {editMode ? "Update" : "Submit"}
-                    </Button>
-                  </div>
-                </Row>
-              </Form>
-            )}
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
-  </Container>
+                      <NewResuableForm
+                        // label={"Name"}
+                        label={
+                          <span>
+                            Name<span className="text-danger">*</span>
+                          </span>
+                        }
+                        placeholder={"Enter Name"}
+                        name={"name"}
+                        type={"text"}
+                        onChange={handleChange}
+                        initialData={formData}
+                        error={errors.name}
+                      />
+                    </Col>
+                    <Col md={6} className="mt-2">
+                      <NewResuableForm
+                        // label={"Designation"}
+                        label={
+                          <span>
+                            Designation<span className="text-danger">*</span>
+                          </span>
+                        }
+                        placeholder={"Enter Designation"}
+                        name={"designation"}
+                        type={"text"}
+                        onChange={handleChange}
+                        initialData={formData}
+                        error={errors.designation}
+                      />
+                    </Col>
+                    <Col md={6} className="mt-2">
+                      <NewResuableForm
+                        // label={"Description "}
+                        label={
+                          <span>
+                            Description<span className="text-danger">*</span>
+                          </span>
+                        }
+                        placeholder={"Enter Description "}
+                        name={"description"}
+                        type={"text"}
+                        onChange={handleChange}
+                        initialData={formData}
+                        textarea
+                        error={errors.description}
+                      />
+                      <div className="text-end small">
+                        {formData.description?.length || 0}/200
+                      </div>
+                    </Col>
+
+                    <Col md={6} className="mt-2">
+                      <NewResuableForm
+                        label={
+                          <span>
+                            Experience (Years)
+                            <span className="text-danger">*</span>
+                          </span>
+                        }
+                        placeholder={"Enter Experience (0–50)"}
+                        name={"experience"}
+                        type={"number"}
+                        onChange={handleChange}
+                        initialData={formData}
+                        error={errors.experience}
+                      />
+                    </Col>
+
+                    <Col md={6} className="mt-2">
+                      <NewResuableForm
+                        label={
+                          <span>
+                            Qualification<span className="text-danger">*</span>
+                          </span>
+                        }
+                        placeholder={"Enter Qualification"}
+                        name={"qualification"}
+                        type={"text"}
+                        onChange={handleChange}
+                        initialData={formData}
+                        error={errors.qualification}
+                      />
+                    </Col>
+
+                    <Col md={6} className="mt-2">
+                      <NewResuableForm
+                        // label={"Position Number"}
+                        label={
+                          <span>
+                            Position Number
+                            <span className="text-danger">*</span>
+                          </span>
+                        }
+                        placeholder={"Enter Position Number "}
+                        name={"position_no"}
+                        type={"number"}
+                        onChange={handleChange}
+                        initialData={formData}
+                        error={errors.position_no}
+                      />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <div className="mt-3 d-flex justify-content-end">
+                      <Button
+                        type="submit"
+                        variant={editMode ? "success" : "primary"}
+                      >
+                        {editMode ? "Update" : "Submit"}
+                      </Button>
+                    </div>
+                  </Row>
+                </Form>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

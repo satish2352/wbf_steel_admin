@@ -261,7 +261,7 @@
 
 
 ////
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Form } from "react-bootstrap";
 import JoditEditor from "jodit-react";
 
@@ -277,76 +277,47 @@ const NewReusableForm = ({
   error,
   imageDimensiion,
   charLimit,
-  onSubmit,
+  helperText,
 }) => {
-  const [value, setValue] = useState(initialData[name] || "");
-  const [charError, setCharError] = useState("");
 
-  useEffect(() => {
-    setValue(initialData[name] || "");
-  }, [initialData, name]);
+  const value = initialData?.[name] || "";
 
   const handleChange = (e) => {
     const { value, files } = e.target;
     const newValue = type === "file" ? files[0] : value;
 
-    if (charLimit && newValue.length > charLimit) {
-      setCharError(`Character limit of ${charLimit} exceeded`);
-    } else {
-      setCharError("");
-      setValue(newValue);
-      onChange(name, newValue);
-    }
+    // just forward to parent – parent decides what is allowed
+    onChange(name, newValue);
   };
 
   const handleEditorChange = (newContent) => {
-    if (charLimit && newContent.length > charLimit) {
-      setCharError(`Character limit of ${charLimit} exceeded`);
-    } else {
-      setCharError("");
-      setValue(newContent);
-      onChange(name, newContent);
-    }
+    onChange(name, newContent);
   };
 
   return (
     <Form.Group>
       <Form.Label>{label}</Form.Label>
+
       {imageDimensiion && (
         <span className="form-text text-danger ms-2">
           ({imageDimensiion})
         </span>
       )}
-      {charLimit && (
-        <span className="form-text text-danger ms-2">
-          (Max {charLimit} characters)
-        </span>
-      )}
+
       {type === "file" ? (
         <>
           <Form.Control
-            type={type}
+            type="file"
             accept="image/*,.pdf,.doc,.docx, video/*"
             onChange={handleChange}
-            isInvalid={!!error || !!charError}
+            isInvalid={!!error}
           />
-          {(error || charError) && (
-            <div className="invalid-feedback d-block">
-              {error || charError}
-            </div>
-          )}
+          {error && <div className="invalid-feedback d-block">{error}</div>}
         </>
       ) : useJodit ? (
         <>
-          <JoditEditor
-            value={value}
-            onChange={handleEditorChange}
-          />
-          {(error || charError) && (
-            <div className="invalid-feedback d-block">
-              {error || charError}
-            </div>
-          )}
+          <JoditEditor value={value} onChange={handleEditorChange} />
+          {error && <div className="invalid-feedback d-block">{error}</div>}
           {charLimit && (
             <div className="text-muted">
               {value.length}/{charLimit}
@@ -360,18 +331,14 @@ const NewReusableForm = ({
             placeholder={placeholder}
             value={value}
             onChange={handleChange}
-            isInvalid={!!error || !!charError}
+            isInvalid={!!error}
           />
           {charLimit && (
             <div className="text-muted">
               {value.length}/{charLimit}
             </div>
           )}
-          {(error || charError) && (
-            <Form.Control.Feedback type="invalid">
-              {error || charError}
-            </Form.Control.Feedback>
-          )}
+          {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
         </>
       ) : (
         <>
@@ -380,18 +347,10 @@ const NewReusableForm = ({
             placeholder={placeholder}
             value={value}
             onChange={handleChange}
-            isInvalid={!!error || !!charError}
+            isInvalid={!!error}
           />
-          {charLimit && (
-            <div className="text-muted">
-              {value.length}/{charLimit}
-            </div>
-          )}
-          {(error || charError) && (
-            <Form.Control.Feedback type="invalid">
-              {error || charError}
-            </Form.Control.Feedback>
-          )}
+          {helperText && <div className="text-muted">{helperText}</div>}
+          {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
         </>
       )}
     </Form.Group>
@@ -399,5 +358,4 @@ const NewReusableForm = ({
 };
 
 export default NewReusableForm;
-
 
