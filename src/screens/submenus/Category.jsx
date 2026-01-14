@@ -298,7 +298,7 @@ const Category = () => {
                     headers: {
                       Authorization: `Bearer ${accessToken}`,
                       "Content-Type": "application/json",
-                    },
+                },
                   });
                   toast.success("Data Deleted Successfully");
                   fetchTeam();
