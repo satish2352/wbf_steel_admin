@@ -260,6 +260,8 @@ const Category = () => {
       setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
     }
   };
+
+  
   const handleDelete = async (id) => {
     confirmAlert({
       title: "Confirm to delete",
