@@ -343,21 +343,27 @@ const handleChange = async (eOrName, maybeValue) => {
     return;
   }
 
-  /* ---------------- COMPANY NAME ---------------- */
   if (name === "company_Name") {
-    if (!companyNameRegex.test(value)) {
-      setErrors((prev) => ({
-        ...prev,
-        company_Name: "Invalid characters",
-      }));
-      return; // ⛔ block typing
-    } else {
-      setErrors((prev) => ({ ...prev, company_Name: "" }));
-    }
-
-    setFormData((prev) => ({ ...prev, company_Name: value }));
+  // ✅ Allow empty value (for backspace / clearing)
+  if (value === "") {
+    setFormData((prev) => ({ ...prev, company_Name: "" }));
+    setErrors((prev) => ({ ...prev, company_Name: "" }));
     return;
   }
+
+  if (!companyNameRegex.test(value)) {
+    setErrors((prev) => ({
+      ...prev,
+      company_Name: "Invalid characters",
+    }));
+    return;
+  }
+
+  setErrors((prev) => ({ ...prev, company_Name: "" }));
+  setFormData((prev) => ({ ...prev, company_Name: value }));
+  return;
+}
+
 
   /* ---------------- EXPERIENCE (0–50 only) ---------------- */
   if (name === "experience") {
@@ -384,21 +390,29 @@ const handleChange = async (eOrName, maybeValue) => {
     return;
   }
 
-  /* ---------------- STAR (1–5 only) ---------------- */
-  if (name === "star") {
-    if (!/^\d*$/.test(value)) return; // ⛔ block letters
-
-    const num = Number(value);
-    if (num < 1 || num > 5) {
-      setErrors((prev) => ({ ...prev, star: "Star must be 1 to 5" }));
-      return; // ⛔ stop typing
-    } else {
-      setErrors((prev) => ({ ...prev, star: "" }));
-    }
-
-    setFormData((prev) => ({ ...prev, star: value }));
+ if (name === "star") {
+  // ✅ allow empty value (for backspace)
+  if (value === "") {
+    setFormData((prev) => ({ ...prev, star: "" }));
+    setErrors((prev) => ({ ...prev, star: "" }));
     return;
   }
+
+  // allow digits only
+  if (!/^\d+$/.test(value)) return;
+
+  const num = Number(value);
+
+  if (num < 1 || num > 5) {
+    setErrors((prev) => ({ ...prev, star: "Star must be 1 to 5" }));
+    return;
+  }
+
+  setErrors((prev) => ({ ...prev, star: "" }));
+  setFormData((prev) => ({ ...prev, star: value }));
+  return;
+}
+
 
   /* ---------------- REVIEW (200 chars max) ---------------- */
   if (name === "review") {
