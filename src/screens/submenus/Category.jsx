@@ -143,7 +143,7 @@ const Category = () => {
     const accessToken = localStorage.getItem("accessToken"); // Retrieve access token
     try {
       const response = await instance.get(
-        "/category/get-category",
+        "/category/get-category-admin",
         {
           headers: {
             Authorization: "Bearer " + accessToken,
