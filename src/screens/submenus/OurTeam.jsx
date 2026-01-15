@@ -250,10 +250,10 @@ const OurTeam = () => {
     }
 
     // POSITION NO
-    if (!formData.position_no) {
-      errors.position_no = "Position no is required";
-      isValid = false;
-    }
+    // if (!formData.position_no) {
+    //   errors.position_no = "Position no is required";
+    //   isValid = false;
+    // }
 
     setErrors(errors);
     return isValid;
@@ -388,20 +388,20 @@ const OurTeam = () => {
         setShowTable(true); // Switch back to table view after submission
       } catch (error) {
         console.error("Error handling form submission:", error);
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.message ===
-            "Position no already exists, please enter another number"
-        ) {
-          setErrors({
-            ...errors,
-            position_no:
-              "Position no already exists, please enter another number",
-          });
-        } else {
-          toast.error("An error occurred. Please try again.");
-        }
+        // if (
+        //   error.response &&
+        //   error.response.data &&
+        //   error.response.data.message ===
+        //     "Position no already exists, please enter another number"
+        // ) {
+        //   setErrors({
+        //     ...errors,
+        //     position_no:
+        //       "Position no already exists, please enter another number",
+        //   });
+        // } else {
+        //   toast.error("An error occurred. Please try again.");
+        // }
       } finally {
         setLoading(false); // Set loading to false
       }
@@ -773,7 +773,7 @@ const OurTeam = () => {
                       />
                     </Col>
 
-                    <Col md={6} className="mt-2">
+                    {/* <Col md={6} className="mt-2">
                       <NewResuableForm
                         // label={"Position Number"}
                         label={
@@ -789,7 +789,7 @@ const OurTeam = () => {
                         initialData={formData}
                         error={errors.position_no}
                       />
-                    </Col>
+                    </Col> */}
                   </Row>
                   <Row>
                     <div className="mt-3 d-flex justify-content-end">
