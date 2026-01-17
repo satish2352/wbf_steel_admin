@@ -221,9 +221,8 @@ const BlogDetails = () => {
           "Content-Type": "application/json",
         },
       });
-      const reversedData = response.data.responseData.reverse();
-      setTeam(reversedData);
-      setData(reversedData);
+    setTeam(response.data.responseData);
+setData(response.data.responseData);
     } catch (error) {
       console.error(
         "Error fetching team:",
@@ -385,6 +384,10 @@ const BlogDetails = () => {
               "Content-Type": "multipart/form-data",
             },
           });
+           setTeam((prev) => [res.data.responseData, ...prev]);
+           setData((prev) => [res.data.responseData, ...prev]);
+
+
           toast.success("Data Submitted Successfully");
         }
         fetchTeam();
